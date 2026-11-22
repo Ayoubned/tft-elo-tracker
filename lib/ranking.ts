@@ -14,6 +14,13 @@ export function compareRanks(a: { tier: string; division: string | null; league_
 }
 
 export function formatRank(tier: string, division: string | null) {
-  return [(tier ?? "UNRANKED").charAt(0) + tier.slice(1).toLowerCase(), division && TIER_ORDER[tier] < TIER_ORDER.MASTER ? division : null]
+  const normalizedTier = tier ?? "UNRANKED";
+
+  return [
+    normalizedTier.charAt(0) + normalizedTier.slice(1).toLowerCase(),
+    tier && division && TIER_ORDER[tier] < TIER_ORDER.MASTER
+      ? division
+      : null,
+  ]
     .filter(Boolean).join(" ");
 }
