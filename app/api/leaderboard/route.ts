@@ -17,10 +17,25 @@ export async function GET() {
       .select("player_id,game_name,tag_line,tier,division,league_points,fetched_at,wins,losses")
       .eq("competition_id", competition.id);
     if (error) throw error;
-    const players = (data ?? []).sort(compareRanks).map((player, index, all) => ({
-      ...player,
-      position: index > 0 && compareRanks(player, all[index - 1]) === 0 ? all[index - 1].position : index + 1,
-    }));
+    
+    const sortedPlayers = (data ?? []).sort(compareRanks);
+
+    let lastPosition = 0;
+    let lastPlayer: (typeof sortedPlayers)[number] | undefined;
+
+    const players = sortedPlayers.map((player, index) => {
+      if (!lastPlayer || compareRanks(player, lastPlayer) !== 0) {
+        lastPosition = index + 1;
+      }
+
+      lastPlayer = player;
+
+      return {
+        ...player,
+        position: lastPosition,
+      };
+    });
+
     return NextResponse.json({
       competition,
       players,
