@@ -1,0 +1,25 @@
+name: Sync TFT ranks
+
+on:
+  schedule:
+    # GitHub Actions can run this on a 30-minute cadence; timing may be delayed by GitHub.
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call the protected sync endpoint
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "APP_URL and CRON_SECRET repository secrets are required."
+            exit 1
+          fi
+          curl --fail --silent --show-error \
+            --retry 2 --retry-delay 5 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL%/}/api/cron/sync"
