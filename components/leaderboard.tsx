@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Crown, RefreshCw, Shield, Users } from "lucide-react";
+import { formatRank } from "@/lib/ranking";
 
 type Player = {
-  player_id: string; game_name: string; tag_line: string; tier: string;
-  division: string | null; league_points: number; fetched_at: string;
-  wins: number; losses: number; position: number;
+  player_id: string; game_name: string; tag_line: string; tier: string | null;
+  division: string | null; league_points: number | null; fetched_at: string | null;
+  wins: number | null; losses: number | null; position: number;
 };
 type Payload = { competition: { id: string; name: string; set_name: string } | null; players: Player[]; updatedAt: string | null };
 
@@ -17,11 +18,16 @@ const tierColor: Record<string, string> = {
 };
 
 function rankName(player: Player) {
-  const name = player.tier
-  ? player.tier.charAt(0) + player.tier.slice(1).toLowerCase()
-  : "Unranked";
-  return player.division && !["MASTER", "GRANDMASTER", "CHALLENGER"].includes(player.tier)
-    ? `${name} ${player.division}` : name;
+  return formatRank(player.tier, player.division);
+}
+
+function formatRecord(player: Player) {
+  if (player.wins == null || player.losses == null) return "—";
+  return `${player.wins.toLocaleString()}W · ${player.losses.toLocaleString()}L`;
+}
+
+function formatLp(player: Player) {
+  return player.league_points == null ? "—" : player.league_points.toLocaleString();
 }
 
 function timeAgo(value: string | null) {
@@ -82,9 +88,9 @@ export default function Leaderboard() {
       </div>
       {loading ? <div className="px-5 py-16 text-center text-sm text-slate-500">Loading leaderboard…</div> : error ? <div className="px-5 py-16 text-center text-sm text-rose-300">{error}</div> : players.length === 0 ? <div className="px-5 py-16 text-center"><Users className="mx-auto mb-3 text-slate-600" size={28}/><p className="font-semibold text-slate-300">No players yet</p><p className="mt-1 text-sm text-slate-500">The admin can add your group using Riot IDs below.</p></div> : players.map((player) => <div key={player.player_id} className="grid grid-cols-[54px_1fr_110px] items-center gap-3 border-b border-white/[0.06] px-5 py-4 last:border-0 sm:grid-cols-[70px_1fr_150px_110px]">
         <div className="flex items-center gap-1 font-mono text-sm text-slate-500">{player.position === 1 && <Crown size={15} className="text-amber-300"/>}{String(player.position).padStart(2, "0")}</div>
-        <div className="min-w-0"><div className="truncate font-semibold text-slate-100">{player.game_name}</div><div className="truncate text-xs text-slate-500">#{player.tag_line}</div><div className={`mt-1 text-xs font-semibold sm:hidden ${tierColor[player.tier] ?? "text-slate-300"}`}>{rankName(player)}</div></div>
-        <div className={`hidden text-sm font-semibold sm:block ${tierColor[player.tier] ?? "text-slate-300"}`}>{rankName(player)}</div>
-        <div className="text-right"><div className="font-mono text-lg font-bold tabular-nums text-amber-200">{player.league_points.toLocaleString()} <span className="text-xs font-medium text-amber-300/60">LP</span></div><div className="text-[10px] text-slate-600">{player.wins}W · {player.losses}L</div></div>
+        <div className="min-w-0"><div className="truncate font-semibold text-slate-100">{player.game_name}</div><div className="truncate text-xs text-slate-500">#{player.tag_line}</div><div className={`mt-1 text-xs font-semibold sm:hidden ${(player.tier ? tierColor[player.tier] : undefined) ?? "text-slate-400"}`}>{rankName(player)}</div></div>
+        <div className={`hidden text-sm font-semibold sm:block ${(player.tier ? tierColor[player.tier] : undefined) ?? "text-slate-400"}`}>{rankName(player)}</div>
+        <div className="text-right"><div className="font-mono text-lg font-bold tabular-nums text-amber-200">{formatLp(player)} {player.league_points != null && <span className="text-xs font-medium text-amber-300/60">LP</span>}</div><div className="text-[10px] text-slate-600">{formatRecord(player)}</div></div>
       </div>)}
       <div className="flex items-center justify-between border-t border-white/10 bg-black/10 px-5 py-3"><span className="text-xs text-slate-600">Official Riot ranked data</span><button onClick={() => setAdminOpen(!adminOpen)} className="inline-flex items-center gap-1.5 text-xs text-slate-500 transition hover:text-amber-200"><Shield size={13}/> Admin</button></div>
     </div>
