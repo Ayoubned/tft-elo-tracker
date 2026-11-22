@@ -17,7 +17,7 @@ const tierColor: Record<string, string> = {
 };
 
 function rankName(player: Player) {
-  const name = player.tier.charAt(0) + player.tier.slice(1).toLowerCase();
+  const name = (player.tier ?? "U").charAt(0) + player.tier.slice(1).toLowerCase();
   return player.division && !["MASTER", "GRANDMASTER", "CHALLENGER"].includes(player.tier)
     ? `${name} ${player.division}` : name;
 }

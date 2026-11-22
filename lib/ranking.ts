@@ -14,6 +14,6 @@ export function compareRanks(a: { tier: string; division: string | null; league_
 }
 
 export function formatRank(tier: string, division: string | null) {
-  return [tier.charAt(0) + tier.slice(1).toLowerCase(), division && TIER_ORDER[tier] < TIER_ORDER.MASTER ? division : null]
+  return [(tier ?? "UNRANKED").charAt(0) + tier.slice(1).toLowerCase(), division && TIER_ORDER[tier] < TIER_ORDER.MASTER ? division : null]
     .filter(Boolean).join(" ");
 }
