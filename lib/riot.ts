@@ -37,3 +37,28 @@ export async function getTftRank(puuid: string) {
   const entries = await riotFetch<RiotLeagueEntry[]>(`https://${PLATFORM}.api.riotgames.com${path}`);
   return entries.find((entry) => entry.queueType === "RANKED_TFT") ?? null;
 }
+
+
+export type RiotSummoner = { puuid: string; profileIconId: number };
+
+export async function getSummonerProfileIconId(puuid: string): Promise<number | null> {
+  const path = `/lol/summoner/v4/summoners/by-puuid/${encodeURIComponent(puuid)}`;
+  const summoner = await riotFetch<RiotSummoner>(`https://${PLATFORM}.api.riotgames.com${path}`);
+  return Number.isInteger(summoner.profileIconId) ? summoner.profileIconId : null;
+}
+
+export async function getProfileIconUrl(profileIconId: number | null): Promise<string | null> {
+  if (profileIconId == null || !Number.isInteger(profileIconId) || profileIconId < 0) return null;
+  try {
+    const response = await fetch("https://ddragon.leagueoflegends.com/api/versions.json", {
+      next: { revalidate: 86400 },
+    });
+    if (!response.ok) return null;
+    const versions = await response.json() as string[];
+    const version = versions?.[0];
+    if (!version) return null;
+    return `https://ddragon.leagueoflegends.com/cdn/${version}/img/profileicon/${profileIconId}.png`;
+  } catch {
+    return null;
+  }
+}

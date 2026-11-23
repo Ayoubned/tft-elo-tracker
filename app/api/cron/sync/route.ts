@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
-import { getTftRank } from "@/lib/riot";
+import { getTftRank, getSummonerProfileIconId } from "@/lib/riot";
 
 export const maxDuration = 60;
 
@@ -30,7 +30,17 @@ export async function GET(request: NextRequest) {
     const player = Array.isArray(member.players) ? member.players[0] : member.players;
     if (!player) continue;
     try {
-      const rank = await getTftRank(player.puuid);
+        try {
+          const profileIconId = await getSummonerProfileIconId(player.puuid);
+          if (profileIconId != null) {
+            const { error: iconError } = await supabase.from("players")
+              .update({ profile_icon_id: profileIconId }).eq("id", player.id);
+            if (iconError) throw iconError;
+          }
+        } catch (iconError) {
+          console.warn(`Could not refresh profile icon for player ${player.id}:`, iconError);
+        }
+        const rank = await getTftRank(player.puuid);
       if (!rank) { unchangedOrUnranked++; continue; }
       const { data: latest, error: latestError } = await supabase.from("rank_snapshots")
         .select("tier,division,league_points,wins,losses")
