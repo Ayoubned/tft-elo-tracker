@@ -39,10 +39,7 @@ export async function GET() {
     return NextResponse.json({
       competition,
       players,
-      updatedAt: players.reduce<string | null>((latest, p) => {
-        if (!p.fetched_at) return latest;
-        return !latest || p.fetched_at > latest ? p.fetched_at : latest;
-      }, null),
+      updatedAt: players.reduce<string | null>((latest, p) => p.fetched_at && (!latest || p.fetched_at > latest) ? p.fetched_at : latest, null),
     });
   } catch (error) {
     console.error("Leaderboard error:", error);
