@@ -39,9 +39,11 @@ npm run dev
 
 Open http://localhost:3000.
 
-## 4. Add players
+## 4. Admin session and player management
 
-Open the **Admin** section at the bottom of the leaderboard. Enter each player's Riot ID and the `ADMIN_SECRET` value. The player is resolved through Account-V1 and added to the active competition.
+Open **Admin** on the leaderboard and enter `ADMIN_SECRET` once. The server creates an 8-hour admin session in a signed, `HttpOnly`, `Secure` (in production), `SameSite=Strict` cookie. The secret is not stored in browser storage and is not sent again for each admin action.
+
+Use **End session** when finished. Add-player, remove-player, and manual-sync API routes require a valid admin session. The scheduled cron route remains separately protected by `CRON_SECRET`.
 
 ## 5. Configure automatic sync
 
@@ -77,7 +79,7 @@ Authorization: Bearer YOUR_CRON_SECRET
 | `RIOT_PLATFORM_ROUTING` | `euw1` for EUW |
 | `RIOT_REGIONAL_ROUTING` | `europe` for Riot ID lookup |
 | `CRON_SECRET` | Protects scheduled sync route; also add as GitHub Actions secret |
-| `ADMIN_SECRET` | Protects add-player route |
+| `ADMIN_SECRET` | Admin sign-in code and signing key for the 8-hour session cookie |
 | `NEXT_PUBLIC_COMPETITION_NAME` | Display name |
 
 ## Current MVP scope / known follow-ups
@@ -86,7 +88,7 @@ Authorization: Bearer YOUR_CRON_SECRET
 - No player login or user accounts.
 - Rank snapshots are stored only when the ranked entry changes.
 - Unranked players are not shown until Riot returns a ranked entry.
-- Add a proper admin session/login before sharing admin access with more than one trusted person. The current shared admin secret is a minimal private-project gate.
+- Admin actions use a shared sign-in code and an 8-hour signed browser session. There are no individual admin accounts or audit trail.
 - Add a sync lock if multiple workflow executions can overlap, plus a persistent sync-status table and richer retry/backoff handling.
 - Set name is seeded as a placeholder; update it in Supabase for the current live TFT set.
 - Riot API response schemas and endpoint availability should be verified against the current Developer Portal when activating the API key.

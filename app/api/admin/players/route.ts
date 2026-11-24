@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { timingSafeEqual } from "node:crypto";
 import { getSupabase } from "@/lib/supabase";
+import { isAdminRequest } from "@/lib/admin-auth";
 import { getAccount, getSummonerProfileIconId } from "@/lib/riot";
 
-function isAuthorized(request: NextRequest) {
-  const expected = process.env.ADMIN_SECRET;
-  const supplied = request.headers.get("x-admin-secret");
-  if (!expected || !supplied) return false;
-  const a = Buffer.from(expected);
-  const b = Buffer.from(supplied);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
 
 export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  if (!isAdminRequest(request)) return NextResponse.json({ error: "Admin session required. Please sign in again." }, { status: 401 });
   try {
     const body = await request.json();
     const gameName = String(body.gameName ?? "").trim();
@@ -52,8 +44,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ error: "Admin session required. Please sign in again." }, { status: 401 });
   }
 
   try {
